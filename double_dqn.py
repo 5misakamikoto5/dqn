@@ -44,11 +44,6 @@ class QNetwork(nn.Module):
         ##################
         # YOUR CODE HERE #
 
-        # x = inputs[np.newaxis, :]
-        # x = torch.Tensor(x)
-        # x = x.float() / 255
-        # x = x.to(device)
-
         x = F.relu(self.conv1(inputs))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
