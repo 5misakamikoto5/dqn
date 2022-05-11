@@ -169,7 +169,10 @@ class AgentDQN(Agent):
 
         q_eval = self.eval_dqn(obs).gather(-1, actions.unsqueeze(-1)).squeeze(-1)
         q_next = self.target_dqn(next_obs).detach()
-        q_target = rewards + self.gamma * (1-dones) * torch.max(q_next, dim = -1)[0]
+        q_eval_next = self.eval_dqn(next_obs).detach()
+        next_obs = torch.argmax(q_eval_next,dim = -1)
+        q_target = rewards + self.gamma * (1-dones) * q_next[next_obs]
+
         Loss = self.loss_fn(q_eval, q_target)
         self.optim.zero_grad()
         Loss.backward()
@@ -195,6 +198,7 @@ class AgentDQN(Agent):
         return int(action)
         ##################
         # pass
+    def save_model(self,episode):
 
     def run(self):
         """
