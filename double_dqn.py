@@ -14,9 +14,9 @@ import math
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 # device = torch.device("cpu")
 
-MODEL_STORE_PATH = "/home/cyl/DQN/model"
-modelname = 'DQN_Pong'
-model_path = MODEL_STORE_PATH + '/' + 'model/' + 'DQN_Pong_episode900.pt'
+MODEL_STORE_PATH = "./model"
+modelname = 'Double_DQN'
+# model_path = MODEL_STORE_PATH + '/' + 'Double_DQNDQN_episode900.pt'
 
 class QNetwork(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -198,7 +198,6 @@ class AgentDQN(Agent):
         return int(action)
         ##################
         # pass
-    def save_model(self,episode):
 
     def run(self):
         """
@@ -234,7 +233,10 @@ class AgentDQN(Agent):
                
                 if step % self.update_target == 0:
                     self.target_dqn.load_state_dict(self.eval_dqn.state_dict())
-            
+            if i_episode % 200 == 0:#存储模型
+                model_path = MODEL_STORE_PATH + '/' + 'Double_DQNDQN_episode'+ str(i_episode) +'.pt'
+                torch.save(self.eval_dqn.state_dict(), model_path)
+
             print("step:", step, "episode:", i_episode, "epsilon:",  self.eps, "loss:", loss, "reward:", episode_reward)
 
         ##################

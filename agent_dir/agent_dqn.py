@@ -14,9 +14,9 @@ import math
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 # device = torch.device("cpu")
 
-MODEL_STORE_PATH = "/home/cyl/DQN/model"
+MODEL_STORE_PATH = "model"
 modelname = 'DQN_Pong'
-model_path = MODEL_STORE_PATH + '/' + 'model/' + 'DQN_Pong_episode900.pt'
+# model_path = MODEL_STORE_PATH + '/' + 'DQN_Pong_episode900.pt'
 
 class QNetwork(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -43,11 +43,6 @@ class QNetwork(nn.Module):
     def forward(self, inputs):
         ##################
         # YOUR CODE HERE #
-
-        # x = inputs[np.newaxis, :]
-        # x = torch.Tensor(x)
-        # x = x.float() / 255
-        # x = x.to(device)
 
         x = F.relu(self.conv1(inputs))
         x = F.relu(self.conv2(x))
@@ -236,7 +231,11 @@ class AgentDQN(Agent):
                
                 if step % self.update_target == 0:
                     self.target_dqn.load_state_dict(self.eval_dqn.state_dict())
-            
+
+            if i_episode % 200 == 0:#存储模型
+                model_path = MODEL_STORE_PATH + '/' + 'DQNDQN_pong_episode'+ str(i_episode) +'.pt'
+                torch.save(self.eval_dqn.state_dict(), model_path)
+
             print("step:", step, "episode:", i_episode, "epsilon:",  self.eps, "loss:", loss, "reward:", episode_reward)
 
         ##################
