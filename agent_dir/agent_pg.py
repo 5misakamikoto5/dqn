@@ -92,6 +92,7 @@ class AgentPG(Agent):
         self.h = self.env.observation_space.shape[0]  # observation_dim,input size
         self.w = self.env.observation_space.shape[1]
         self.c = self.env.observation_space.shape[2]
+        self.max_episode = args.max_episode
         self.action_dim = self.env.action_space.n  # output_size
         self.policy_net = PGNetwork(self.h, args.hidden_size,
                                     self.action_dim).to(device)
@@ -111,23 +112,18 @@ class AgentPG(Agent):
         """
         ##################
         # YOUR CODE HERE #
-        # reward_list = transition_dict['rewards']
-        # state_list = transition_dict['states']
-        # action_list = transition_dict['actions']
-        obs, actions, rewards, _, _ = self.replay_buffer.sample(self.batch_size)
-
+        obs, actions, rewards, _ , _ = self.replay_buffer.sample(self.replay_buffer.__len__())
         actions = torch.tensor(np.array(actions), dtype=torch.long).to(device)
-        dones = torch.tensor(np.array(dones), dtype=torch.float32).to(device)
         rewards = torch.tensor(np.array(rewards), dtype=torch.float32).to(device)
         obs = torch.tensor(np.array(obs), dtype=torch.float32).to(device)
 
         G = 0
         self.optimizer.zero_grad()
-        for i in reversed(range(len(reward_list))):  # 从最后一步算起
-            reward = reward_list[i]
-            state = torch.tensor([state_list[i]],
-                                 dtype=torch.float).to(self.device)
-            action = torch.tensor([action_list[i]]).view(-1, 1).to(self.device)
+        for i in reversed(range(rewards.size)):  # 从最后一步算起
+            reward = rewards[i]
+            state = torch.tensor([obs[i]],
+                                 dtype=torch.float).to(device)
+            action = torch.tensor([actions[i]]).view(-1, 1).to(device)
             log_prob = torch.log(self.policy_net(state).gather(1, action))
             G = self.gamma * G + reward
             loss = -log_prob * G  # 每一步的损失函数
@@ -158,5 +154,28 @@ class AgentPG(Agent):
         """
         ##################
         # YOUR CODE HERE #
+        return_list = []
+        for i_episode in range(int(self.max_episodes / 10)):
+            episode_return = 0
+
+            obs = self.env.reset()
+            done = False
+            while not done:
+                action = self.make_action(obs)
+                next_obs, reward, done, info = self.env.step(action)
+                self.store_transition = (obs, action, reward, next_obs, done)  # 存储记忆
+                self.replay_buffer.push(self.store_transition)
+                obs = next_obs
+                episode_return += reward
+            return_list.append(episode_return)
+            self.train()
+            if (i_episode + 1) % 10 == 0:
+                pbar.set_postfix({
+                    'episode':
+                        '%d' % (num_episodes / 10 * i + i_episode + 1),
+                    'return':
+                        '%.3f' % np.mean(return_list[-10:])
+                })
+            pbar.update(1)
         ##################
         pass

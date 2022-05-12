@@ -3,6 +3,7 @@ import random
 import copy
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
 from pathlib import Path
 from tensorboardX import SummaryWriter
 from torch import nn, optim
@@ -136,7 +137,8 @@ class AgentDQN(Agent):
         self.optim = optim.Adam(self.parameters, lr=self.lr)
         self.loss_fn = nn.MSELoss()
         self.learn_step = 0
-        
+        self.rewardlist = []
+        self.episodelsit = []
         ##################
         # pass
     
@@ -197,6 +199,14 @@ class AgentDQN(Agent):
         ##################
         # pass
 
+    def plot_reward(self):
+        plt.plot(self.episodelsit, self.rewardlist)
+        plt.xlabel('episode')
+        plt.ylabel('episode_reward')
+        plt.title('train_reward')
+        plt.savefig('/test.jpg')
+        plt.show()
+
     def run(self):
         """
         Implement the interaction between agent and environment here
@@ -236,6 +246,9 @@ class AgentDQN(Agent):
                 torch.save(self.eval_dqn.state_dict(), model_path)
 
             print("step:", step, "episode:", i_episode, "epsilon:",  self.eps, "loss:", loss, "reward:", episode_reward)
+            self.rewardlist.append(episode_reward)
+            self.episodelsit.append(i_episode)
 
+        self.plot_reward()
         ##################
         # pass
