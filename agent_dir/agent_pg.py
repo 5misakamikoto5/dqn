@@ -29,6 +29,55 @@ class PGNetwork(nn.Module):
         ##################
         pass
 
+class ReplayBuffer:
+    def __init__(self, buffer_size):
+        ##################
+        # YOUR CODE HERE #
+        self.buffer_size = buffer_size
+        self.buffer = []
+        ##################
+        # pass
+
+    def __len__(self):
+        ##################
+        # YOUR CODE HERE #
+        return len(self.buffer)
+        ##################
+        # pass
+
+    def push(self, *transition):
+        ##################
+        # YOUR CODE HERE #
+        if len(self.buffer) == self.buffer_size: #buffer not full
+            self.buffer.pop(0)
+        self.buffer.append(transition)
+        ##################
+        # pass
+
+    def sample(self, batch_size):
+        ##################
+        # YOUR CODE HERE #
+        index = np.random.choice(len(self.buffer), batch_size)
+        batch = [self.buffer[i][0] for i in index]
+        return zip(*batch)
+        ##################
+        # pass
+
+    def sampleall(self):#sample all experience
+        ##################
+        # YOUR CODE HERE #
+        index = np.range(0,len(self.buffer))
+        batch = [self.buffer[i][0] for i in index]
+        return zip(*batch)
+        ##################
+        # pass
+
+    def clean(self):
+        ##################
+        # YOUR CODE HERE #
+        self.buffer.clear()
+        ##################
+        # pass
 
 class AgentPG(Agent):
     def __init__(self, env, args):
@@ -48,32 +97,29 @@ class AgentPG(Agent):
                                     self.action_dim).to(device)
         self.optimizer = torch.optim.Adam(self.policy_net.parameters(),
                                           lr=args.lr)  # 使用Adam优化器
-        self.gamma = self.gamma  # 折扣因子
-        # self.device = device
+        self.gamma = args.gamma  # 折扣因子
+        self.seed = args.seed
+        self.batch_size = args.batch_size
+        self.buffer_size = args.buffer_size
+        self.replay_buffer = ReplayBuffer(self.buffer_size)
         ##################
         pass
 
-    def init_game_setting(self):
-        """
-
-        Testing function will call this function at the begining of new game
-        Put anything you want to initialize if necessary
-
-        """
-        ##################
-        # YOUR CODE HERE #
-        ##################
-        pass
-
-    def train(self,transition_dict):
+    def train(self):
         """
         Implement your training algorithm here
         """
         ##################
         # YOUR CODE HERE #
-        reward_list = transition_dict['rewards']
-        state_list = transition_dict['states']
-        action_list = transition_dict['actions']
+        # reward_list = transition_dict['rewards']
+        # state_list = transition_dict['states']
+        # action_list = transition_dict['actions']
+        obs, actions, rewards, _, _ = self.replay_buffer.sample(self.batch_size)
+
+        actions = torch.tensor(np.array(actions), dtype=torch.long).to(device)
+        dones = torch.tensor(np.array(dones), dtype=torch.float32).to(device)
+        rewards = torch.tensor(np.array(rewards), dtype=torch.float32).to(device)
+        obs = torch.tensor(np.array(obs), dtype=torch.float32).to(device)
 
         G = 0
         self.optimizer.zero_grad()

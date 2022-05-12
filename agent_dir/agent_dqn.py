@@ -81,11 +81,12 @@ class ReplayBuffer:
     def sample(self, batch_size):
         ##################
         # YOUR CODE HERE #
-        index = np.random.choice(len(self.buffer), batch_size)
+        index = np.range(0,len(self.buffer))
         batch = [self.buffer[i][0] for i in index]
         return zip(*batch)
         ##################
         # pass
+
 
     def clean(self):
         ##################
