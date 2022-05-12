@@ -8,7 +8,8 @@ from tqdm import tqdm
 def parse():
     parser = argparse.ArgumentParser(description="SYSU_RL_HW2")
     parser.add_argument('--train_pg', default=False, type=bool, help='whether train policy gradient')
-    parser.add_argument('--train_dqn', default=True, type=bool, help='whether train DQN')
+    parser.add_argument('--train_dqn', default=False, type=bool, help='whether train DQN')
+    parser.add_argument('--double_dqn', default=True, type=bool, help='whether train Double_DQN')
 
     parser = dqn_arguments(parser)
     # parser = pg_arguments(parser)
@@ -30,7 +31,13 @@ def run(args):
         from agent_dir.agent_dqn import AgentDQN
         agent = AgentDQN(env, args)
         agent.run()
-        
+
+    if args.double_dqn:
+        env_name = args.env_name
+        env = make_env(env_name)
+        from double_dqn import AgentDQN
+        agent = AgentDQN(env, args)
+        agent.run()
 
 
 if __name__ == '__main__':
