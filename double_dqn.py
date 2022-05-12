@@ -168,12 +168,9 @@ class AgentDQN(Agent):
         next_obs = torch.tensor(np.array(next_obs), dtype=torch.float32).to(device)
 
         q_eval = self.eval_dqn(obs).gather(-1, actions.unsqueeze(-1)).squeeze(-1)
-        q_next = self.target_dqn(next_obs).detach()
-        q_eval_next = self.eval_dqn(next_obs).detach()
-        next_act = torch.argmax(q_eval_next,dim = -1)
+        q_next = self.eval_dqn(next_obs).detach()
 
-        q_target = rewards + self.gamma * (1-dones) * q_next[next_act]
-
+        q_target = rewards + self.gamma * (1-dones) * torch.max(q_next, dim = -1)[0]
         Loss = self.loss_fn(q_eval, q_target)
         self.optim.zero_grad()
         Loss.backward()
